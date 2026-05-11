@@ -1,0 +1,38 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install scikit-learn numpy pandas joblib
+        pip freeze > requirements.txt
+
+    - name: Run pipeline
+      run: |
+        python ml_pipeline.py
+
+    - name: Make pipeline reproducible
+      run: |
+        echo "Recording dependencies and model state..."
+        mkdir -p output
+        cp requirements.txt output/
+        cp ml_pipeline.py output/
+        
+    - name: Upload ML Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ml-reproducibility-package
+        path: output/
